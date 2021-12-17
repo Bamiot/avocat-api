@@ -15,7 +15,7 @@ const nedb = require('nedb')
 // const avocatRooms = new nedb({ filename: 'avocatrooms', autoload: true })
 // const avocatPlayers = new nedb({ filename: 'avocatplayers', autoload: true })
 // constants
-const PORT = 4081
+const PORT = 3001
 
 // session store
 let RedisStore = require('connect-redis')(session)
