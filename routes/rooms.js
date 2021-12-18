@@ -60,5 +60,11 @@ router.get('/create', (req, res) => {
   } else res.status(400).send({ error: 'roomId or username isnt valid' })
 })
 
-router.get('/publicRooms', (req, res) => {})
+router.get('/publicRooms', (req, res) => {
+  avocatRooms.find({ private: false }, (err, rooms) => {
+    if (err) res.status(400).send({ error: 'failed' })
+    else res.status(200).send(rooms)
+  })
+})
+
 module.exports = router
