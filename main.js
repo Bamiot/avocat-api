@@ -53,15 +53,11 @@ passport.deserializeUser((user, done) => {
 app.use('/rooms', require('./routes/rooms'))
 require('./routes/games.js')
 
-//api
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
+// auth
 app.get('/auth', (req, res) => {
   passport.authenticate('local', {
     successRedirect: '/',
-    failureRedirect: '/login'
+    failureRedirect: '/'
   })
 })
 
