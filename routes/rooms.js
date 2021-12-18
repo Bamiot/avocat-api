@@ -48,8 +48,8 @@ router.get('/create', (req, res) => {
       else {
         let room =
           password && password.length > 2
-            ? { roomId: room_id, password }
-            : { roomId: room_id }
+            ? { roomId: room_id, private: true, password }
+            : { roomId: room_id, private: false }
         avocatRooms.insert(room)
         let user = { username: username, isReady: false, room: room_id }
         avocatPlayers.insert(user)
@@ -63,7 +63,19 @@ router.get('/create', (req, res) => {
 router.get('/publicRooms', (req, res) => {
   avocatRooms.find({ private: false }, (err, rooms) => {
     if (err) res.status(400).send({ error: 'failed' })
-    else res.status(200).send(rooms)
+    else {
+      rooms.map((room) => {
+        room.players = []
+        room.maxPlayers = 4
+        avocatPlayers.find({ room: room.roomId }, (err, players) => {
+          if (err) res.status(400).send({ error: 'failed' })
+          else {
+            room.players = players
+            res.status(201).send(rooms)
+          }
+        })
+      })
+    }
   })
 })
 

@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node main.js",
-    "watch": "nodemon main.js",
+    "watch": "nodemon -L main.js",
     "client": "npm start",
     "build": "npm run build",
     "client-watch": "npm run watch"
