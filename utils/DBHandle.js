@@ -60,14 +60,6 @@ module.exports = {
       })
     })
   },
-  getPlayers: (roomId) => {
-    return new Promise((resolve) => {
-      avocatPlayers.find({ roomId: roomId }, (error, players) => {
-        if (error) resolve({ error })
-        else resolve({ players })
-      })
-    })
-  },
   addPlayer: async (roomId, username, password) => {
     return new Promise((resolve) => {
       if (roomId !== '' && username !== '') {
@@ -92,6 +84,23 @@ module.exports = {
           }
           resolve({ error: 'room not found' })
         })
+      } else resolve({ error: 'roomId or username isnt valid' })
+    })
+  },
+  removePlayer: async (roomId, username) => {
+    return new Promise((resolve) => {
+      if (roomId !== '' && username !== '') {
+        avocatPlayers.findOne(
+          { $and: [{ username: username }, { room: roomId }] },
+          (error, user) => {
+            if (error) resolve({ error })
+            else if (!user) resolve({ error: 'player not found' })
+            else {
+              avocatPlayers.remove({ $and: [{ username: username }, { room: roomId }] })
+              resolve({ user, message: 'player removed' })
+            }
+          }
+        )
       } else resolve({ error: 'roomId or username isnt valid' })
     })
   }
