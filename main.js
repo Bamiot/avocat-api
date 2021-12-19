@@ -9,11 +9,9 @@ const passport = require('passport')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const redis = require('redis')
-const nedb = require('nedb')
 
-//init nedb
-// const avocatRooms = new nedb({ filename: 'avocatrooms', autoload: true })
-// const avocatPlayers = new nedb({ filename: 'avocatplayers', autoload: true })
+const dbHandle = require('./utils/DBHandle')
+
 // constants
 const PORT = 3001
 
@@ -32,7 +30,7 @@ app.use(session({ secret: 'chatchienlapin', resave: false, saveUninitialized: fa
 app.use(passport.initialize())
 app.use(
   session({
-    secret: 'yoloooooooooooooooooooooooooooooooooooooooooo!',
+    secret: 'lemotdepassedavantetaisclaqueausol',
     resave: false,
     saveUninitialized: false,
     store: new RedisStore({ client: redisClient }),
