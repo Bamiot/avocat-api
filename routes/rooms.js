@@ -4,9 +4,14 @@ const router = express.Router()
 const dbHandle = require('../utils/DBHandle')
 
 router.get('/create', async (req, res) => {
-  const { room_id, username, password } = req.query
+  const { room_id, username, password, maxplayers } = req.query
   if (room_id !== '' && username !== '') {
-    const { room, error } = await dbHandle.createRoom(room_id, username, password)
+    const { room, error } = await dbHandle.createRoom(
+      room_id,
+      username,
+      password,
+      maxplayers
+    )
     dbHandle.addPlayer(room_id, username)
     if (error) res.status(400).send({ error })
     else res.status(201).send({ room })

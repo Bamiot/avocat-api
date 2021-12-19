@@ -4,7 +4,7 @@ const avocatRooms = new nedb({ filename: 'avocatrooms', autoload: true })
 const avocatPlayers = new nedb({ filename: 'avocatplayers', autoload: true })
 
 module.exports = {
-  createRoom: (roomId, username, password) => {
+  createRoom: (roomId, username, password, maxPlayers) => {
     return new Promise((resolve) => {
       if (roomId !== '') {
         avocatRooms.findOne({ roomId: roomId }, (error, room) => {
@@ -13,8 +13,8 @@ module.exports = {
           else {
             let room =
               password && password.length > 2
-                ? { roomId, private: true, password }
-                : { roomId, private: false, password: null }
+                ? { roomId, private: true, password, maxPlayers }
+                : { roomId, private: false, password: null, maxPlayers }
             avocatRooms.insert(room)
             console.log(`room ${roomId} create by ${username}.`)
             return resolve({ room, message: 'room created' })
@@ -42,7 +42,7 @@ module.exports = {
   },
   getRooms: () => {
     return new Promise((resolve) => {
-      avocatRooms.find({}, async (error, rooms) => {
+      avocatRooms.find({ private: false }, async (error, rooms) => {
         if (error) resolve({ error })
         else {
           for (const room of rooms) {
