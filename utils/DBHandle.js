@@ -68,6 +68,7 @@ module.exports = {
           else if (room) {
             if (room.private && room.password !== password)
               resolve({ error: 'wrong password' })
+            if (room.players.length >= room.maxPlayers) resolve({ error: 'room is full' })
             avocatPlayers.findOne(
               { $and: [{ username: username }, { room: roomId }] },
               (error, player) => {
