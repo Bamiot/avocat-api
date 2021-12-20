@@ -12,9 +12,11 @@ router.get('/create', async (req, res) => {
       password,
       maxplayers
     )
-    dbHandle.addPlayer(room_id, username)
     if (error) res.status(400).send({ error })
-    else res.status(201).send({ room })
+    else {
+      dbHandle.addPlayer(room_id, username)
+      res.status(201).send({ room })
+    }
   } else res.status(400).send({ error: 'roomId or username isnt valid' })
 })
 

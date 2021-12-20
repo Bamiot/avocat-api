@@ -40,6 +40,14 @@ module.exports = {
       })
     })
   },
+  changePlayerReady: (roomId, username, value) => {
+    return new Promise((resolve) => {
+      avocatPlayers.update({ $and: [{ room: roomId, username: username }] }, (error) => {
+        if (error) resolve({ error })
+        else resolve({ message: 'done' })
+      })
+    })
+  },
   getRooms: () => {
     return new Promise((resolve) => {
       avocatRooms.find({ private: false }, async (error, rooms) => {
@@ -69,7 +77,7 @@ module.exports = {
             if (room.private && room.password !== password)
               resolve({ error: 'wrong password' })
 
-            avocatPlayers.find({}, (error, players) => {
+            avocatPlayers.find({ roomId: roomId }, (error, players) => {
               if (error) resolve({ error })
               let player = players.find((player) => player.username === username)
               if (player) resolve({ error: 'this pseudo already exist in this room' })
@@ -80,8 +88,7 @@ module.exports = {
                 resolve({ user, message: 'player added' })
               }
             })
-          }
-          resolve({ error: 'room not found' })
+          } else resolve({ error: 'room not found' })
         })
       } else resolve({ error: 'roomId or username isnt valid' })
     })

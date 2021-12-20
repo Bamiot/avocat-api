@@ -1,30 +1,22 @@
-const { instrument } = require('@socket.io/admin-ui')
-const http = require('http');
 const express = require("express");
-const socketIO = require('socket.io');
-let app = express();
-let server = http.createServer(app);
-let io = socketIO(server);
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+const dbHandle = require('../utils/DBHandle')
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, { /* options */ });
 
-// Socket
-module.exports = function(io){
-io.on('connection', (socket) => {
-  console.log(socket.id)
-  socket.on('data', (room_id, clientName) => {
-    console.log(clientName)
-    socket.join(room_id)
-    dbGames.findOne({ roomId: room_id }, (err, room) => {
-      io.to(room_id).emit(`data`, room)
-    })
-    socket.on('disconnect', () => {
-      dbGames.findOne({ roomId: room_id }, (err, room) => {
-        io.to(room_id).emit(`data`, room)
-        console.log(room)
-      })
-    })
-  })
-})
-}
-instrument(io, { auth: false })
+io.on("connection", (socket) => {
+  socket.on("roomState", async(room_id,username) => {
+    socket.join(room_id);
+    const { room, error } = await dbHandle.getRoom(room_id)
+    if(error) console.log(error);
+    else io.to(room_id).emit(`roomState`, room);
+    socket.on("disconnect", () => {
+    });
+  });
+});
 
-module.exports = io
+httpServer.listen(3002);
+
+
