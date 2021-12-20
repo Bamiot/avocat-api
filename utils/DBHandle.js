@@ -1,7 +1,7 @@
 const nedb = require('nedb')
 
-const avocatRooms = new nedb({ filename: 'avocatrooms', autoload: true })
-const avocatPlayers = new nedb({ filename: 'avocatplayers', autoload: true })
+const avocatRooms = new nedb({ filename: 'avocatrooms.nedb', autoload: true })
+const avocatPlayers = new nedb({ filename: 'avocatplayers.nedb', autoload: true })
 
 module.exports = {
   createRoom: (roomId, username, password, maxPlayers) => {
