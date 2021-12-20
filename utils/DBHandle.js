@@ -64,24 +64,22 @@ module.exports = {
     return new Promise((resolve) => {
       if (roomId !== '' && username !== '') {
         avocatRooms.findOne({ roomId: roomId }, (error, room) => {
-          if (error) return resolve({ error })
+          if (error) resolve({ error })
           else if (room) {
             if (room.private && room.password !== password)
               resolve({ error: 'wrong password' })
-            if (room.players.length >= room.maxPlayers) resolve({ error: 'room is full' })
-            avocatPlayers.findOne(
-              { $and: [{ username: username }, { room: roomId }] },
-              (error, player) => {
-                if (error) resolve({ error })
-                else if (player)
-                  resolve({ error: 'this pseudo already exist in this room' })
-                else {
-                  let user = { username, isReady: false, room: roomId }
-                  avocatPlayers.insert(user)
-                  resolve({ user, message: 'player added' })
-                }
+
+            avocatPlayers.find({}, (error, players) => {
+              if (error) resolve({ error })
+              let player = players.find((player) => player.username === username)
+              if (player) resolve({ error: 'this pseudo already exist in this room' })
+              if (players.length >= room.maxPlayers) resolve({ error: 'room is full' })
+              else {
+                let user = { username, isReady: false, room: roomId }
+                avocatPlayers.insert(user)
+                resolve({ user, message: 'player added' })
               }
-            )
+            })
           }
           resolve({ error: 'room not found' })
         })
