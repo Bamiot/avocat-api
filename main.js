@@ -49,7 +49,7 @@ passport.deserializeUser((user, done) => {
 
 //routes
 app.use('/rooms', require('./routes/rooms'))
-require('./routes/games.js')
+//require('./routes/games.js')
 
 // auth
 app.get('/auth', (req, res) => {
@@ -62,3 +62,29 @@ app.get('/auth', (req, res) => {
 http.createServer(app).listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`)
 })
+const { createServer } = require('http')
+const { Server } = require('socket.io')
+const socketApp = express()
+const httpServer = createServer(socketApp)
+const io = new Server(httpServer, {
+  /* options */
+})
+
+io.on("connection", (socket) => {
+  console.log('connection')
+  socket.on("joinRoom", async(roomId, username) => {
+    const { room, error } = await dbHandle.getRoom(roomId)
+    if (error) console.log(error)
+    else {
+      socket.join(roomId)
+      io.to(roomId).emit(`joinRoom`, room)
+    }
+  })
+  socket.on('disconnect', () => {})
+})
+
+io.on('roomState', async roomId => {
+  const {room, error} = await dbHandle.getRoom(roomId)
+  io.to(roomId).emit(`roomState`, room)
+})
+httpServer.listen(3002)

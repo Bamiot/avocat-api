@@ -29,7 +29,7 @@ module.exports = {
         if (error) resolve({ error })
         else if (!room) resolve({ error: 'room not found !' })
         else {
-          avocatPlayers.find({ roomId: roomId }, (error, players) => {
+          avocatPlayers.find({ room: roomId }, (error, players) => {
             if (error) resolve({ error })
             else {
               room.players = players
@@ -40,12 +40,41 @@ module.exports = {
       })
     })
   },
-  changePlayerReady: (roomId, username, value) => {
+  isPlayerInRoom: (roomId, username) => {
     return new Promise((resolve) => {
       avocatPlayers.update({ $and: [{ room: roomId, username: username }] }, (error) => {
-        if (error) resolve({ error })
-        else resolve({ message: 'done' })
+        if (error) resolve({ message: `${username} exist in room : ${roomId}` })
+        else resolve(false)
       })
+    })
+  },
+  changePlayerReady: async (roomId, username, value) => {
+    return new Promise(async (resolve) => {
+      const valueOfReady = await new Promise((resolve1) => {
+        avocatPlayers.findOne(
+          { $and: [{ room: roomId }, { username }] },
+          (error, player) => {
+            if (error) resolve1({ error })
+            else resolve1({ player })
+          }
+        )
+      })
+      if (valueOfReady.player) {
+        const playerStateReady = !valueOfReady.player.isReady
+        avocatPlayers.update(
+          { $and: [{ room: roomId, username: username }] },
+          { $set: { isReady: playerStateReady } },
+          (error) => {
+            if (error) {
+              resolve({ error })
+            } else {
+              resolve({
+                message: `ready state of ${username} in the room : ${roomId} has been change to ${playerStateReady}`
+              })
+            }
+          }
+        )
+      } else resolve({ error: 'player not found' })
     })
   },
   getRooms: () => {
