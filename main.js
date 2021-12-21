@@ -85,6 +85,6 @@ io.on("connection", (socket) => {
 
 io.on('roomState', async roomId => {
   const {room, error} = await dbHandle.getRoom(roomId)
-  io.to(roomId).emit(`roomState`, room)
+  io.to(roomId).emit(`joinRoom`, room)
 })
 httpServer.listen(3002)
