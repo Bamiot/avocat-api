@@ -71,7 +71,7 @@ const io = new Server(httpServer, {
 })
 
 io.on("connection", (socket) => {
-  console.log('connection')
+  console.log(`${socket.id} is logged`)
   socket.on("joinRoom", async(roomId, username) => {
     const { room, error } = await dbHandle.getRoom(roomId)
     if (error) console.log(error)
@@ -80,11 +80,14 @@ io.on("connection", (socket) => {
       io.to(roomId).emit(`joinRoom`, room)
     }
   })
-  socket.on('disconnect', () => {})
+  socket.on('disconnect', () => {
+    console.log(`${socket.id} disconnected`);
+  })
 })
 
 io.on('roomState', async roomId => {
   const {room, error} = await dbHandle.getRoom(roomId)
   io.to(roomId).emit(`joinRoom`, room)
 })
+io.dis
 httpServer.listen(3002)

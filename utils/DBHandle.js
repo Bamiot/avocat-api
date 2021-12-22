@@ -42,9 +42,9 @@ module.exports = {
   },
   isPlayerInRoom: (roomId, username) => {
     return new Promise((resolve) => {
-      avocatPlayers.update({ $and: [{ room: roomId, username: username }] }, (error) => {
-        if (error) resolve({ message: `${username} exist in room : ${roomId}` })
-        else resolve(false)
+      avocatPlayers.findOne({ $and: [{ room: roomId, username: username }] }, (error,player) => {
+        if (error || !player) resolve({ error: `${username} do not exist in room : ${roomId}` })
+        else resolve({ message: `${username} exist in room : ${roomId}` })
       })
     })
   },
