@@ -72,12 +72,12 @@ const io = new Server(httpServer, {
 
 io.on("connection", (socket) => {
   console.log(`${socket.id} is logged`)
-  socket.on("joinRoom", async(roomId, username) => {
+  socket.on("avocat", async(roomId, username) => {
     const { room, error } = await dbHandle.getRoom(roomId)
     if (error) console.log(error)
     else {
       socket.join(roomId)
-      io.to(roomId).emit(`joinRoom`, room)
+      io.to(roomId).emit(`avocat`, room)
     }
   })
   socket.on('disconnect', () => {
@@ -85,9 +85,5 @@ io.on("connection", (socket) => {
   })
 })
 
-io.on('roomState', async roomId => {
-  const {room, error} = await dbHandle.getRoom(roomId)
-  io.to(roomId).emit(`joinRoom`, room)
-})
-io.dis
+
 httpServer.listen(3002)
