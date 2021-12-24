@@ -43,10 +43,12 @@ router.get('/publicRooms', async (req, res) => {
   if (error) res.status(400).send({ error })
   else res.status(201).send({ rooms })
 })
-router.get('/ready' , async(req,res) =>{
-  const {roomId, username} = req.query
-  const {message ,error} = await dbHandle.changePlayerReady(roomId,username)
-  if(error) res.status(400).send({error})
-  else res.status(201).send({message})
+
+router.get('/ready', async (req, res) => {
+  const { roomId, username } = req.query
+  const { message, error } = await dbHandle.changePlayerReady(roomId, username)
+  if (error) res.status(400).send({ error })
+  else res.status(201).send({ message })
 })
+
 module.exports = router

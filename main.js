@@ -1,7 +1,7 @@
-const fs = require('fs')
-const path = require('path')
+// const fs = require('fs')
+// const path = require('path')
 const http = require('http')
-const https = require('https')
+//const https = require('https')
 const cors = require('cors')
 const express = require('express')
 const session = require('express-session')
@@ -11,6 +11,7 @@ const bodyParser = require('body-parser')
 const redis = require('redis')
 
 const dbHandle = require('./utils/DBHandle')
+require('./utils/socket')
 
 // constants
 const PORT = 3001
@@ -42,14 +43,12 @@ app.use(
 passport.serializeUser((user, done) => {
   done(null, user)
 })
-
 passport.deserializeUser((user, done) => {
   done(null, user)
 })
 
 //routes
 app.use('/rooms', require('./routes/rooms'))
-//require('./routes/games.js')
 
 // auth
 app.get('/auth', (req, res) => {
@@ -62,28 +61,3 @@ app.get('/auth', (req, res) => {
 http.createServer(app).listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`)
 })
-const { createServer } = require('http')
-const { Server } = require('socket.io')
-const socketApp = express()
-const httpServer = createServer(socketApp)
-const io = new Server(httpServer, {
-  /* options */
-})
-
-io.on("connection", (socket) => {
-  console.log(`${socket.id} is logged`)
-  socket.on("avocat", async(roomId, username) => {
-    const { room, error } = await dbHandle.getRoom(roomId)
-    if (error) console.log(error)
-    else {
-      socket.join(roomId)
-      io.to(roomId).emit(`avocat`, room)
-    }
-  })
-  socket.on('disconnect', () => {
-    console.log(`${socket.id} disconnected`);
-  })
-})
-
-
-httpServer.listen(3002)

@@ -27,7 +27,7 @@ module.exports = {
     return new Promise((resolve) => {
       avocatRooms.findOne({ roomId: roomId }, (error, room) => {
         if (error) resolve({ error })
-        else if (!room) resolve({ error: 'room not found !' })
+        else if (!room) resolve({ error: 'getRoom: room not found !' })
         else {
           avocatPlayers.find({ room: roomId }, (error, players) => {
             if (error) resolve({ error })
@@ -42,13 +42,39 @@ module.exports = {
   },
   isPlayerInRoom: (roomId, username) => {
     return new Promise((resolve) => {
-      avocatPlayers.findOne({ $and: [{ room: roomId, username: username }] }, (error,player) => {
-        if (error || !player) resolve({ error: `${username} do not exist in room : ${roomId}` })
-        else resolve({ message: `${username} exist in room : ${roomId}` })
+      avocatPlayers.findOne(
+        { $and: [{ room: roomId }, { username: username }] },
+        (error, player) => {
+          if (error) resolve({ error })
+          else if (!player)
+            resolve({ error: 'playerIsInRoom: player or room not found !' })
+          else resolve({ player })
+        }
+      )
+    })
+  },
+  changeOnlineStatus: (roomId, username, status = undefined) => {
+    return new Promise((resolve) => {
+      avocatPlayers.findOne({ room: roomId, username: username }, (error, player) => {
+        if (error) resolve({ error })
+        else if (!player)
+          resolve({ error: 'changeOnlineStatus: player or room not found !' })
+        else {
+          if (status !== undefined) player.online = status
+          avocatPlayers.update(
+            { room: roomId, username: username },
+            player,
+            {},
+            (error) => {
+              if (error) resolve({ error })
+              else resolve({ player })
+            }
+          )
+        }
       })
     })
   },
-  changePlayerReady: async (roomId, username, value) => {
+  changePlayerReady: async (roomId, username, value = undefined) => {
     return new Promise(async (resolve) => {
       const valueOfReady = await new Promise((resolve1) => {
         avocatPlayers.findOne(
@@ -60,7 +86,8 @@ module.exports = {
         )
       })
       if (valueOfReady.player) {
-        const playerStateReady = !valueOfReady.player.isReady
+        const playerStateReady =
+          typeof value === 'boolean' ? value : !valueOfReady.player.isReady
         avocatPlayers.update(
           { $and: [{ room: roomId, username: username }] },
           { $set: { isReady: playerStateReady } },
@@ -112,7 +139,7 @@ module.exports = {
               if (player) resolve({ error: 'this pseudo already exist in this room' })
               if (players.length >= room.maxPlayers) resolve({ error: 'room is full' })
               else {
-                let user = { username, isReady: false, room: roomId }
+                let user = { username, isReady: false, room: roomId, online: false }
                 avocatPlayers.insert(user)
                 resolve({ user, message: 'player added' })
               }
@@ -137,6 +164,43 @@ module.exports = {
           }
         )
       } else resolve({ error: 'roomId or username isnt valid' })
+    })
+  },
+  addSocketId: async (roomId, username, socketId) => {
+    return new Promise((resolve) => {
+      if (roomId !== '' && username !== '' && socketId !== '') {
+        avocatPlayers.findOne(
+          { $and: [{ username: username }, { room: roomId }] },
+          (error, user) => {
+            if (error) resolve({ error })
+            else if (!user) resolve({ error: 'addSocketId: player not found' })
+            else {
+              avocatPlayers.update(
+                { $and: [{ username: username }, { room: roomId }] },
+                { $set: { socketId } },
+                (error) => {
+                  if (error) {
+                    resolve({ error })
+                  } else {
+                    resolve({ user, message: 'socketId added' })
+                  }
+                }
+              )
+            }
+          }
+        )
+      } else resolve({ error: 'roomId or username or socketId isnt valid' })
+    })
+  },
+  getPlayerBySocketId: async (socketId) => {
+    return new Promise((resolve) => {
+      if (socketId !== '') {
+        avocatPlayers.findOne({ socketId }, (error, player) => {
+          if (error) resolve({ error })
+          else if (!player) resolve({ error: 'player not found' })
+          else resolve({ player })
+        })
+      } else resolve({ error: 'socketId isnt valid' })
     })
   }
 }
