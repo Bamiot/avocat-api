@@ -76,8 +76,18 @@ io.on('connection', (socket) => {
     dbHandle
       .getPlayerBySocketId(socket.id)
       .then((player) => {
-        dbHandle.changeOnlineStatus(player.room, player.username, false)
-        socket.leave(player.room)
+        dbHandle
+          .getRoom(player.room)
+          .then((room) => {
+            dbHandle.changeOnlineStatus(player.room, player.username, false)
+            socket.leave(player.room)
+            console.log(`${player.username} disconnected from ${player.room}`)
+            room.players[
+              room.players.findIndex((p) => p.username === player.username)
+            ].online = false
+            io.to(player.room).emit('players', room.players)
+          })
+          .catch((error) => mError('disconnect', error))
       })
       .catch((error) => {
         mError('disconnect', error)
