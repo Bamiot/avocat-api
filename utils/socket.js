@@ -40,6 +40,7 @@ io.on('connection', (socket) => {
           console.log(`${username} joined ${roomId}`)
           socket.emit('join', socket.id)
           io.to(roomId).emit('players', room.players)
+          io.to(roomId).emit('room', room)
         }
       }
     }
@@ -61,8 +62,8 @@ io.on('connection', (socket) => {
           io.to(roomId).emit('players', room.players)
         }
       } else if (player.socketId && player.socketId !== socketId)
-        mError('reconnect', 'socketId not match', socketId, player.socketId)
-      else mError('reconnect', `player not connected`, roomId, username)
+        mError('reconnect', `socketId not match ${socketId}`)
+      else mError('reconnect', `player not connected`)
     }
   })
 
@@ -96,7 +97,10 @@ io.on('connection', (socket) => {
       await dbHandle.changePlayerReady(roomId, username, ready)
       const { room, error } = await dbHandle.getRoom(roomId)
       if (error) mError('ready', error)
-      else io.to(roomId).emit('players', room.players)
+      else {
+        io.to(roomId).emit('players', room.players)
+        io.to(roomId).emit('room', room)
+      }
     }
   })
 
