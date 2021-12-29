@@ -2,6 +2,7 @@ const nedb = require('nedb')
 
 const avocatRooms = new nedb({ filename: 'avocatrooms.nedb', autoload: true })
 // const avocatPlayers = new nedb({ filename: 'avocatplayers.nedb', autoload: true })
+// const avocatRooms = new nedb()
 const avocatPlayers = new nedb()
 
 module.exports = {
@@ -190,6 +191,43 @@ module.exports = {
           else return resolve(player)
         })
       } else return reject('socketId isnt valid')
+    })
+  },
+  makeInGame: async (roomId) => {
+    return new Promise((resolve, reject) => {
+      if (roomId !== '') {
+        avocatRooms.findOne({ roomId }, (error, room) => {
+          if (error) return reject(error)
+          else if (!room) return reject('makeInGame: room not found')
+          else {
+            avocatRooms.update({ roomId }, { $set: { inGame: true } }, (error) => {
+              if (error) return reject(error)
+              else return resolve(room)
+            })
+          }
+        })
+      } else return reject('roomId isnt valid')
+    })
+  },
+  updateGameState: async (roomId, gameState) => {
+    return new Promise((resolve, reject) => {
+      if (roomId !== '' && gameState !== '') {
+        avocatRooms.findOne({ roomId }, (error, room) => {
+          if (error) return reject(error)
+          else if (!room) return reject('updateGameState: room not found')
+          else
+            avocatRooms.update({ roomId }, { $set: { gameState } }, (error) => {
+              if (error) return reject(error)
+              else {
+                avocatRooms.findOne({ roomId }, (error, room) => {
+                  if (error) return reject(error)
+                  else if (!room) return reject('updateGameState: room not found')
+                  else return resolve(room)
+                })
+              }
+            })
+        })
+      } else return reject('roomId or gameState isnt valid')
     })
   }
 }

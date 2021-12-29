@@ -13,6 +13,23 @@ const io = new Server(httpServer, {
 })
 
 const dbHandle = require('../utils/DBHandle')
+const avocatGameApi = require('./avocatGame/avocatGameApi')
+
+function getInitState(players) {
+  for (const player of players) {
+    player.cards = []
+    player.hand = ''
+  }
+  return {
+    state: {
+      deck: [],
+      pit: [],
+      currentPlayer: '',
+      players: players
+    },
+    queue: [{ type: 'init' }]
+  }
+}
 
 // server listener
 io.on('connection', (socket) => {
@@ -166,21 +183,63 @@ io.on('connection', (socket) => {
       })
   })
 
-  socket.on('avocat', async ({ roomId, username, roomState, action }) => {
-    const { room, error } = await dbHandle.getRoom(roomId)
-    if (error) {
-      console.log(error, roomId)
-      socket.emit('error', `${error}, ${roomId}`)
-    } else if (room) {
-      let player
-      for (p of room.players) if (p.username === username) player = p
-      if (!player) {
-        console.log('player not found !')
-        socket.emit('error', 'player not found !')
-      } else {
-        socket.emit(`avocat`, room)
-      }
-    }
+  socket.on('start', async ({ roomId, username }) => {
+    dbHandle
+      .getRoom(roomId)
+      .catch((error) => mError('start', error))
+      .then(async (room) => {
+        const owner = room.players.find((player) => player.socketId === socket.id)
+        if (!owner) mError('start', 'you are not the owner')
+        else {
+          const { players } = room
+          const readyPlayers = players.filter((player) => player.ready)
+          if (readyPlayers.length < 0 /* 1 pour les teste passé a maxPlayer ou 2 */)
+            mError('start', 'not enough ready players')
+          else {
+            const { state, queue } = getInitState(room.players)
+            const gameState = await avocatGameApi.nextState(state, queue)
+
+            await dbHandle.makeInGame(roomId)
+
+            dbHandle
+              .updateGameState(roomId, gameState)
+              .catch((error) => mError('start', error))
+              .then(async (newRoom) => {
+                io.to(roomId).emit('room', newRoom)
+                console.log(`${username} start the game ${roomId}`)
+              })
+          }
+        }
+      })
+  })
+
+  socket.on('avocat', async ({ room, action }) => {
+    dbHandle
+      .getPlayerBySocketId(socket.id)
+      .catch((error) => mError('avocat', error))
+      .then((player) => {
+        dbHandle
+          .getRoom(player.room)
+          .catch((error) => mError('avocat', error))
+          .then(async (room) => {
+            const { players, gameState } = room
+            // compare roomState(censuré) avec la bdd
+            gameState.queue.unshift(action)
+            const newGameState = await avocatGameApi.nextState(
+              gameState.state,
+              gameState.queue
+            )
+            dbHandle
+              .updateGameState(room.id, newGameState)
+              .catch((error) => mError('avocat', error))
+              .then(async (room) => {
+                const { players, gameState } = room
+
+                io.to(room.id).emit('room', room)
+                console.log(`${player.username} ${action.type}`)
+              })
+          })
+      })
   })
 })
 
