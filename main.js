@@ -27,7 +27,6 @@ app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 app.use(bodyParser.json())
-app.use(session({ secret: 'chatchienlapin', resave: false, saveUninitialized: false }))
 app.use(passport.initialize())
 app.use(
   session({
